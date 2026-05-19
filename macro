@@ -1,0 +1,100 @@
+Sub CrearCalendario2026()
+    Dim i As Integer
+    Dim fechaInicio As Date
+    Dim nombreMes As String
+    Dim nuevaHoja As Worksheet
+    Dim celda As Range
+    Dim diaActual As Date
+    Dim fila As Integer, columna As Integer
+    
+    ' Matriz con los nombres de los meses en español
+    Dim meses() As Variant
+    meses = Array("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", _
+                  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+    
+    ' Optimizar velocidad del proceso
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    
+    ' Eliminar hojas extra, dejar solo una temporal
+    Do While Sheets.Count > 1
+        Sheets(2).Delete
+    Loop
+    
+    ' Bucle para crear los 12 meses del año 2026
+    For i = 0 To 11
+        nombreMes = meses(i)
+        
+        ' Crear la pestaña del mes
+        Set nuevaHoja = Sheets.Add(After:=Sheets(Sheets.Count))
+        nuevaHoja.Name = nombreMes
+        
+        ' --- DISEÑO Y ESTRUCTURA DEL CALENDARIO ---
+        With nuevaHoja
+            ' Título del Mes
+            .Cells(1, 1).Value = UCase(nombreMes) & " 2026"
+            .Cells(1, 1).Font.Size = 16
+            .Cells(1, 1).Font.Bold = True
+            
+            ' Cabecera de los días de la semana
+            Dim diasSemana() As Variant
+            diasSemana = Array("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+            
+            For columna = 1 To 7
+                .Cells(3, columna).Value = diasSemana(columna - 1)
+                .Cells(3, columna).Font.Bold = True
+                .Cells(3, columna).HorizontalAlignment = xlCenter
+                .Cells(3, columna).Interior.Color = RGB(220, 230, 241) ' Azul claro
+            Next columna
+            
+            ' --- LÓGICA DE LOS DÍAS ---
+            fechaInicio = DateSerial(2026, i + 1, 1)
+            diaActual = fechaInicio
+            fila = 4
+            
+            ' Averiguar en qué columna empieza el día 1 (Lunes = 1, Domingo = 7)
+            ' Usamos vbMonday para que la semana empiece en Lunes
+            columna = Weekday(fechaInicio, vbMonday)
+            
+            ' Rellenar los días del mes
+            Do While Month(diaActual) = i + 1
+                With .Cells(fila, columna)
+                    .Value = Day(diaActual)
+                    .HorizontalAlignment = xlCenter
+                    .Borders.LineStyle = xlContinuous ' Añade cuadrícula
+                    
+                    ' Resaltar fines de semana (Sábado y Domingo)
+                    If columna = 6 Or columna = 7 Then
+                        .Interior.Color = RGB(242, 242, 242) ' Gris claro
+                        .Font.Color = RGB(192, 0, 0) ' Letra roja
+                    End If
+                End With
+                
+                ' Avanzar al siguiente día
+                diaActual = diaActual + 1
+                
+                ' Si llegamos al Domingo, saltamos a la siguiente fila (Lunes)
+                If columna = 7 Then
+                    columna = 1
+                    fila = fila + 1
+                Else
+                    columna = columna + 1
+                End If
+            Loop
+            
+            ' Autoajustar el tamaño de las columnas para que se vea ordenado
+            .Columns("A:G").ColumnWidth = 12
+            .Rows("4:9").RowHeight = 35 ' Espacio vertical para poder escribir notas
+            .Cells(1, 1).Select
+        End With
+    Next i
+    
+    ' Eliminar la primera hoja en blanco que quedó al inicio
+    Sheets(1).Delete
+    
+    ' Activar de nuevo la actualización de pantalla
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = True
+    
+    MsgBox "¡Calendario de pestañas del año 2026 generado con éxito!", vbInformation, "Listo"
+End Sub
